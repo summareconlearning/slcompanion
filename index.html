@@ -484,6 +484,17 @@ body.desk .intro{border-radius:36px;padding:30px 34px;min-height:180px}
 body.desk .intro b{font-size:40px}
 body.desk .intro p{font-size:17px;width:55%}
 body.desk .intro .ia{width:140px;height:140px}
+/* banner video */
+.ad-sub{margin:14px 0 4px;padding:14px;border-radius:16px;background:#f6f5fa}.ad-sub>b{display:block;margin-bottom:10px;font-size:14px}
+.bn{margin-top:26px;margin-bottom:110px}.bn-h{display:flex;align-items:center;gap:10px;margin:0 4px 10px;flex-wrap:wrap}
+.bn-l{background:var(--gm,#f90);color:#fff;font-weight:800;font-size:12px;padding:4px 12px;border-radius:99px}.bn-h b{font-size:clamp(16px,1.4vw,20px)}
+.bn-v{position:relative;width:100%;aspect-ratio:16/9;border-radius:24px;overflow:hidden;background:#111;box-shadow:0 14px 34px rgba(0,0,0,.18)}
+body.desk .bn-v{aspect-ratio:21/8}
+.bn-v img,.bn-v video,.bn-v iframe{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:0;display:block}
+.bn-p{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.28))}
+.bn-p span{width:68px;height:68px;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;box-shadow:0 8px 22px rgba(0,0,0,.35);transition:transform .25s}
+.bn-p:hover span{transform:scale(1.08)}.bn-p svg{width:28px;height:28px;margin-left:3px}
+.bn-v.on .bn-p{display:none}
 body.desk .scs{grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:26px;margin-top:30px}
 body.desk .sc{aspect-ratio:1;border-radius:34px}
 body.desk .sc-lbl b{font-size:26px}
@@ -3415,11 +3426,13 @@ function renderFitur(ci,back){
         <canvas></canvas>
       </div>
       <div class="sc-ctl"><span>${scratched[ci+'-'+i]?'Ketuk kartu untuk demo':'Gosok kartunya ✋'}</span><button class="quick" data-q="${i}">Buka cepat ⚡</button></div></div>`).join('')}</div>
+    ${bannerHTML(c)}
   </div>`;
   show('c-list',back); setTab(ci);
   $('#c-list [data-back]').onclick=()=>go('home',0,true);
   $('#sc-reset').onclick=()=>{c.items.forEach((_,i)=>delete scratched[ci+'-'+i]);renderFitur(ci,true);};
   $('#c-list').querySelectorAll('.sc').forEach((card,i)=>setupScratch(card,c,ci,i));
+  setupBanner(c);
 }
 async function setupScratch(card,c,ci,i){
   const it=c.items[i], key=ci+'-'+i, cv=card.querySelector('canvas'), u=card.querySelector('.sc-u');
@@ -3498,6 +3511,21 @@ function closeAnim(){
     setTimeout(()=>{if(t===RUN)pick.animate([{opacity:1},{opacity:0}],{duration:180,fill:'forwards'});},360);}
   setTimeout(()=>{if(t===RUN)closeOv();else closing=false;},580);
 }
+/* banner video panjang di bawah kartu (diatur di admin per kategori) */
+function bannerHTML(c){const b=c.banner;if(!b||b.show==='off'||(!b.video&&!b.thumb))return'';
+  const y=ytId(b.video||''),po=b.thumb||(y?`https://img.youtube.com/vi/${y}/hqdefault.jpg`:'');
+  return`<div class="bn a" style="--i:${3+c.items.length};${gv(c.guardian)}">
+    ${b.title||b.label?`<div class="bn-h">${b.label?`<span class="bn-l">${esc(b.label)}</span>`:''}${b.title?`<b>${esc(b.title)}</b>`:''}</div>`:''}
+    <div class="bn-v" data-bn>${po?`<img src="${esc(po)}" alt="" draggable="false">`:''}${b.video?`<button class="bn-p" type="button" aria-label="Putar video"><span>${PLAY}</span></button>`:''}</div></div>`;}
+function setupBanner(c){const b=c.banner,box=$('#c-list [data-bn]');if(!b||!box||!b.video)return;
+  const y=ytId(b.video),auto=b.mode==='auto';
+  const go=()=>{ytStop();
+    if(y){const q=auto?`&mute=1&loop=1&playlist=${y}&controls=0`:'';box.innerHTML=`<iframe src="${ytEmbed(y)}${q}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;}
+    else{const v=document.createElement('video');v.playsInline=true;v.setAttribute('playsinline','');v.src=vsrc(b.video);if(b.thumb)v.poster=b.thumb;
+      if(auto){v.muted=true;v.loop=true;v.autoplay=true;}else v.controls=true;box.innerHTML='';box.appendChild(v);v.play().catch(()=>{});}
+    box.classList.add('on');};
+  if(auto){go();return;}
+  box.querySelector('.bn-p').onclick=go;}
 function prepVideo(it){
   const yid=ytId(it.video); if(!it.video||yid)return{yid,vid:null};
   const v=document.createElement('video'); v.playsInline=true; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
@@ -3798,7 +3826,7 @@ let adminOn=false, kbuf='', pvk='c', saveT=null; const openSet=new Set(['cfg']);
 const STATUS_OPT=Object.keys(STATUS).map(k=>[k,STATUS[k][0]]);
 const GUARD_OPT=GK.map(k=>[k,GUARD[k].name]);
 function getP(p){return p.split('.').reduce((o,k)=>o==null?o:o[k],DATA);}
-function setP(p,v){const ks=p.split('.');const last=ks.pop();const o=ks.reduce((o,k)=>o[k],DATA);o[last]=v;}
+function setP(p,v){const ks=p.split('.');const last=ks.pop();const o=ks.reduce((o,k)=>(o[k]==null?(o[k]={}):o[k]),DATA);o[last]=v;}
 const fIn=(l,p,full,hint,type='text')=>`<label class="f ${full?'full':''}"><span>${l}</span><input type="${type}" data-p="${p}" value="${esc(getP(p))}">${hint?`<span class="f-hint">${hint}</span>`:''}</label>`;
 const fTa=(l,p,lines,hint)=>`<label class="f full"><span>${l}</span><textarea data-p="${p}" ${lines?'data-lines':''} rows="3">${esc(lines?(getP(p)||[]).join('\n'):getP(p))}</textarea>${hint?`<span class="f-hint">${hint}</span>`:''}</label>`;
 const fSel=(l,p,opts)=>`<label class="f"><span>${l}</span><select data-p="${p}">${opts.map(([v,t])=>`<option value="${v}" ${getP(p)===v?'selected':''}>${esc(t)}</option>`).join('')}</select></label>`;
@@ -3856,7 +3884,12 @@ function adminForm(){
         ${fIn('Judul kartu beranda',P+'.tileTitle')}${fSel('Gambar kartu beranda',P+'.tileArt',[['fitur','Ilustrasi Fitur'],['materi','Ilustrasi Materi'],['guardian','Karakter Guardian']])}
         ${fIn('Teks di samping angka',P+'.sub')}${fIn('Sub judul halaman',P+'.introTitle')}
         ${isF?fTa('Cuplikan kategori',P+'.snippet',false,'Tampil di intro halaman kartu gosok.'):''}
-      </div>`;
+      </div>
+      ${isF?`<div class="ad-sub"><b>Banner video (di bawah kartu)</b>
+        <div class="ad-grid">${fSel('Banner',P+'.banner.show',[['on','Tampil'],['off','Sembunyikan']])}${fSel('Mode putar',P+'.banner.mode',[['tap','Ketuk untuk putar (bersuara)'],['auto','Autoplay senyap & loop']])}
+        ${fIn('Label kecil (opsional)',P+'.banner.label')}${fIn('Judul banner (opsional)',P+'.banner.title')}
+        ${fIn('Link video (YouTube / .mp4)',P+'.banner.video',true,'Tempel link YouTube atau link langsung file .mp4. Kosongkan untuk menyembunyikan banner.')}</div>
+        <div class="ad-btns" style="margin-top:8px"><label>Upload thumbnail banner<input type="file" accept="image/*,.svg" hidden data-bnimg="${P}"></label>${c.banner&&c.banner.thumb?`<button class="lt" data-act="clr" data-p="${P}.banner.thumb">Hapus thumbnail</button>`:''}<span class="f-hint">Rasio lebar (mis. 1600×600). Kosong = thumbnail otomatis dari YouTube.</span></div></div>`:''}`;
     c.items.forEach((it,ii)=>{
       const Q=`${P}.items.${ii}`, kk=k+'-'+ii;
       h+=`<details class="ad-d" data-k="${kk}" ${openSet.has(kk)?'open':''}><summary><span class="sm-g" style="${gv(it.guardian)}">${headI(it.guardian)}</span><span class="sm-t">${esc(it.title)}</span>
@@ -3925,6 +3958,7 @@ function renderForm(){
   f.onchange=async e=>{const el=e.target;
     if(el.dataset.card&&el.files[0]){status('Memproses kartu…');try{setP(el.dataset.card+'.card',await compressCard(el.files[0]));renderForm();changed(true);}catch(_){status('Gambar tidak bisa dibaca');}}
     if(el.dataset.cover&&el.files[0]){status('Memproses sampul…');try{setP(el.dataset.cover+'.cover',await compressCover(el.files[0]));renderForm();changed(true);}catch(_){status('Gambar tidak bisa dibaca');}}
+    if(el.dataset.bnimg&&el.files[0]){status('Memproses gambar…');try{setP(el.dataset.bnimg+'.banner.thumb',await compressKeep(el.files[0]));renderForm();changed(true);}catch(_){status('Gambar tidak bisa dibaca');}}
     if(el.dataset.imgk&&el.files[0]){status('Memproses gambar…');try{setP(el.dataset.imgk+'.thumb',await compressKeep(el.files[0]));renderForm();changed(true);}catch(_){status('Gambar tidak bisa dibaca');}}
     if(el.dataset.img&&el.files[0]){status('Memproses gambar…');try{setP(el.dataset.img+'.thumb',await compress(el.files[0]));renderForm();changed(true);}catch(_){status('Gambar tidak bisa dibaca');}}
     if(el.dataset.vid&&el.files[0]){const file=el.files[0],key='media/'+file.name.replace(/\s+/g,'-');status('Menyimpan video…');
