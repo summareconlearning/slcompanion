@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#ffffff">
 <title>Summarecon Learning — What's New · Rapat Kerja</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3363,8 +3363,10 @@ function go(v,ci,back){
   view={v,ci};
   if(v==='home')renderHome(back); else (DATA.cats[ci].type==='materi'?renderMateri:renderFitur)(ci,back);
 }
+/* warna bar atas Safari/Chrome HP mengikuti halaman (putih untuk beranda/fitur, gelap untuk roulette & overlay) */
+function setTheme(dark){const c=dark?'#17181d':'#ffffff';let m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',c);document.documentElement.style.background=c;if(document.body)document.body.style.background=c;const cp=document.getElementById('companion');if(cp)cp.style.background=c;}
 function show(id,back,wheel){
-  if(!wheel)stopWheel();
+  if(!wheel)stopWheel(); setTheme(!!wheel);
   $('#c-list').classList.toggle('wheel-on',!!wheel);
   ['c-home','c-list'].forEach(s=>$('#'+s).hidden=s!==id);
   const el=$('#'+id); el.classList.remove('screen-in','screen-back','in'); void el.offsetWidth;
@@ -3498,7 +3500,7 @@ function wrap(x,t,X,Y,mw,lh,max){const ws=String(t).split(' ');let line='',n=0;f
 /* ---------- overlay helpers (cancel-safe) ---------- */
 let RUN=0, curVid=null;
 let closing=false, curBack=null;
-function closeOv(){RUN++;closing=false;curBack=null;modBack=null;ytStop();try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}if(curVid){try{curVid.pause();}catch(e){}curVid=null;}const ov=$('#deck-ov');ov.classList.remove('dim','closing');ov.hidden=true;ov.innerHTML='';}
+function closeOv(){setTheme(!!$('#c-list').classList.contains('wheel-on')&&!$('#c-list').hidden);RUN++;closing=false;curBack=null;modBack=null;ytStop();try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}if(curVid){try{curVid.pause();}catch(e){}curVid=null;}const ov=$('#deck-ov');ov.classList.remove('dim','closing');ov.hidden=true;ov.innerHTML='';}
 function closeAnim(){
   const ov=$('#deck-ov'); if(ov.hidden||closing)return;
   closing=true; const t=++RUN;
@@ -3537,6 +3539,7 @@ function prepVideo(it){
   return{yid,vid:v};
 }
 function ovBase(my,gm){
+  setTheme(true);
   const ov=$('#deck-ov'); if(curVid){try{curVid.pause();}catch(e){}curVid=null;}
   closing=false; ov.classList.remove('closing'); ov.hidden=false; ov.innerHTML=''; ov.style.setProperty('--gm',gm);
   const x=document.createElement('button'); x.className='dk-x'; x.innerHTML=XI; x.setAttribute('aria-label','Tutup'); x.onclick=closeAnim; ov.appendChild(x);
@@ -4076,6 +4079,7 @@ async function publishGH(btn){
    BOOT  —  #companion = HP peserta · #present = layar presenter
    ===================================================================== */
 const HASH=location.hash.slice(1), PREVIEW=HASH.startsWith('preview-');
+if(HASH==='companion'||HASH==='preview-c')setTheme(false);
 function refreshView(){
   if(!$('#cover').hidden)renderCover();
   if(appOn){buildTabs();$('#tabs').classList.remove('show');go(view.v,view.ci,true);}
