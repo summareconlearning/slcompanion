@@ -486,11 +486,10 @@ body.desk .intro p{font-size:17px;width:55%}
 body.desk .intro .ia{width:140px;height:140px}
 /* banner video */
 .ad-sub{margin:14px 0 4px;padding:14px;border-radius:16px;background:#f6f5fa}.ad-sub>b{display:block;margin-bottom:10px;font-size:14px}
-.bn{margin-top:26px;margin-bottom:110px}.bn-h{display:flex;align-items:center;gap:10px;margin:0 4px 10px;flex-wrap:wrap}
+.bn{margin:22px auto 0;width:100%;max-width:min(100%,1100px)}.bn-h{display:flex;justify-content:center;text-align:center;align-items:center;gap:10px;margin:0 4px 10px;flex-wrap:wrap}
 .bn-l{background:var(--gm,#f90);color:#fff;font-weight:800;font-size:12px;padding:4px 12px;border-radius:99px}.bn-h b{font-size:clamp(16px,1.4vw,20px)}
 .bn-v{position:relative;width:100%;aspect-ratio:16/9;border-radius:24px;overflow:hidden;background:#111;box-shadow:0 14px 34px rgba(0,0,0,.18)}
-body.desk .bn-v{aspect-ratio:21/8}
-.bn-v img,.bn-v video,.bn-v iframe{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:0;display:block}
+.bn-v img,.bn-v video,.bn-v iframe{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;border:0;display:block}
 .bn-p{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.28))}
 .bn-p span{width:68px;height:68px;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;box-shadow:0 8px 22px rgba(0,0,0,.35);transition:transform .25s}
 .bn-p:hover span{transform:scale(1.08)}.bn-p svg{width:28px;height:28px;margin-left:3px}
@@ -3419,6 +3418,7 @@ function renderFitur(ci,back){
   $('#c-list').innerHTML=`<div class="wrap">
     ${topbar(c,`<button class="reset" id="sc-reset">↺ Tutup lagi</button>`)}
     ${introHTML(c,13)}
+    ${bannerHTML(c)}
     <div class="scs">${c.items.map((it,i)=>`<div class="a" style="--i:${2+i}">
       <div class="sc ${it.thumb?'hasimg':''} ${scratched[ci+'-'+i]?'done':''}" data-i="${i}" style="${gv(it.guardian)}">
         ${it.thumb?`<div class="sc-u"><img class="sc-img" src="${esc(it.thumb)}" alt="${esc(it.title)}" draggable="false">${it.thumbLbl==='none'?'':it.thumbLbl==='full'?`<div class="sc-lbl"><b>${esc(it.title)}</b><span class="go">${PLAY}</span></div>`:`<span class="go sc-play">${PLAY}</span>`}</div>`
@@ -3426,7 +3426,6 @@ function renderFitur(ci,back){
         <canvas></canvas>
       </div>
       <div class="sc-ctl"><span>${scratched[ci+'-'+i]?'Ketuk kartu untuk demo':'Gosok kartunya ✋'}</span><button class="quick" data-q="${i}">Buka cepat ⚡</button></div></div>`).join('')}</div>
-    ${bannerHTML(c)}
   </div>`;
   show('c-list',back); setTab(ci);
   $('#c-list [data-back]').onclick=()=>go('home',0,true);
@@ -3519,6 +3518,11 @@ function bannerHTML(c){const b=c.banner;if(!b||b.show==='off'||(!b.video&&!b.thu
     <div class="bn-v" data-bn>${po?`<img src="${esc(po)}" alt="" draggable="false">`:''}${b.video?`<button class="bn-p" type="button" aria-label="Putar video"><span>${PLAY}</span></button>`:''}</div></div>`;}
 function setupBanner(c){const b=c.banner,box=$('#c-list [data-bn]');if(!b||!box||!b.video)return;
   const y=ytId(b.video),auto=b.mode==='auto';
+  /* ukuran banner mengikuti resolusi asli video / thumbnail yang diupload */
+  const fit=r=>{if(!(r>0.2&&r<8))return;box.style.aspectRatio=String(r);box.parentNode.style.maxWidth=`min(100%,calc(72vh*${r}))`;};
+  if(y)fit(16/9);
+  else{const pv=document.createElement('video');pv.preload='metadata';pv.muted=true;pv.onloadedmetadata=()=>fit(pv.videoWidth/pv.videoHeight);pv.src=vsrc(b.video);
+    if(b.thumb){const im=new Image();im.onload=()=>{if(!box.style.aspectRatio)fit(im.naturalWidth/im.naturalHeight);};im.src=b.thumb;}}
   const go=()=>{ytStop();
     if(y){const q=auto?`&mute=1&loop=1&playlist=${y}&controls=0`:'';box.innerHTML=`<iframe src="${ytEmbed(y)}${q}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;}
     else{const v=document.createElement('video');v.playsInline=true;v.setAttribute('playsinline','');v.src=vsrc(b.video);if(b.thumb)v.poster=b.thumb;

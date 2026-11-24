@@ -1,5 +1,5 @@
 {
-  "_v": 1795502566395,
+  "_v": 1795503356196,
   "config": {
     "companionUrl": "",
     "event": "Rapat Kerja 2027",
@@ -95,7 +95,11 @@
         }
       ],
       "tileTitle": "Fitur",
-      "tileArt": "fitur"
+      "tileArt": "fitur",
+      "banner": {
+        "video": "https://s3-id-jkt-1.kilatstorage.id/image-vid-sl/RK2027/FITUR/FRONT/Perbandingan%20Sl%281%29.mp4",
+        "mode": "auto"
+      }
     },
     {
       "type": "materi",
