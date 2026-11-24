@@ -394,7 +394,22 @@ img{display:block;max-width:100%}
 #deck-ov.closing .vfs{opacity:0}
 .pn-tg{position:fixed;z-index:9;height:44px;min-width:44px;border-radius:99px;background:#fff;color:#121212;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 13px;font-weight:800;font-size:14px;box-shadow:0 6px 18px #0006;animation:tgIn .45s .3s cubic-bezier(.3,1.6,.5,1) both;transition:left .55s cubic-bezier(.2,1,.3,1),top .55s cubic-bezier(.2,1,.3,1),transform .2s}
 .pn-tg:hover{transform:scale(1.07)}.pn-tg svg{width:18px;height:18px}
-/* popup modul tanpa video */
+/* halaman detail modul di dalam panel */
+.pn-in{animation:pnInR .4s cubic-bezier(.2,1,.3,1) both}
+.pn-inl{animation:pnInL .4s cubic-bezier(.2,1,.3,1) both}
+.pn-out{animation:pnOut .15s ease-in both}
+@keyframes pnInR{from{opacity:0;transform:translateX(36px)}}
+@keyframes pnInL{from{opacity:0;transform:translateX(-36px)}}
+@keyframes pnOut{to{opacity:0;transform:translateX(-18px)}}
+.pn-back{display:flex;width:fit-content;align-items:center;gap:6px;height:42px;padding:0 18px 0 10px;border-radius:99px;background:#f1f0f5;color:#121212;font-weight:800;font-size:14px;margin:0 0 16px;max-width:100%;transition:background .2s,transform .2s}
+.pn-back:hover{background:#e6e4ee;transform:translateX(-2px)}.pn-back svg{width:20px;height:20px;flex:none}.pn-back span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dk-info.desk .pn-back{height:46px;font-size:clamp(14px,1vw,16px)}
+.pn-mod .mp-l{margin:0 0 10px;font-size:13px;padding:5px 14px}
+.pn-mod .sh-d2{margin-top:12px}
+.pn-mod .mp-q{margin:20px 0 0;text-align:left;padding:14px 16px}
+.pn-mod .mp-go{margin-top:18px}
+.dk-info.desk .pn-mod .mp-q{font-size:clamp(15px,1.1vw,18px)}
+/* popup modul tanpa video (tidak dipakai lagi) */
 .mth{position:absolute;inset:0}
 .mpop{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:22px;background:rgba(8,8,12,.62);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);cursor:pointer;animation:mpBg .28s ease both}
 .mpop.out{animation:mpBgOut .24s ease both;pointer-events:none}
@@ -3150,6 +3165,7 @@ const BACK=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 const XI=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`;
 const PLAY=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>`;
 const FS_IN=`<svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>`,FS_OUT=`<svg class="fo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>`;
+let modBack=null;
 let ytMsg=null; function ytStop(){if(ytMsg){removeEventListener('message',ytMsg);ytMsg=null;}}
 const REPLAY=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg>`;
 const PAUSE=`<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4.5" height="16" rx="1"/><rect x="13.5" y="4" width="4.5" height="16" rx="1"/></svg>`;
@@ -3470,7 +3486,7 @@ function wrap(x,t,X,Y,mw,lh,max){const ws=String(t).split(' ');let line='',n=0;f
 /* ---------- overlay helpers (cancel-safe) ---------- */
 let RUN=0, curVid=null;
 let closing=false, curBack=null;
-function closeOv(){RUN++;closing=false;curBack=null;ytStop();try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}if(curVid){try{curVid.pause();}catch(e){}curVid=null;}const ov=$('#deck-ov');ov.classList.remove('dim','closing');ov.hidden=true;ov.innerHTML='';}
+function closeOv(){RUN++;closing=false;curBack=null;modBack=null;ytStop();try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}if(curVid){try{curVid.pause();}catch(e){}curVid=null;}const ov=$('#deck-ov');ov.classList.remove('dim','closing');ov.hidden=true;ov.innerHTML='';}
 function closeAnim(){
   const ov=$('#deck-ov'); if(ov.hidden||closing)return;
   closing=true; const t=++RUN;
@@ -3714,22 +3730,12 @@ async function openShow(it,r,kind,my,pv){
     if(autoplay==='mod')go(); else playBtn(go);
   }
   /* modul tanpa video: tampilkan thumbnail + ajakan buka di LMS */
+  /* modul tanpa video: pemutar menampilkan thumbnail modul; panel berganti ke halaman detail modul */
   function showThumb(m){
     if(curVid){try{curVid.pause();}catch(e){}curVid=null;}
+    ytStop();
     const tm={thumb:m.thumb,title:m.title||it.title,guardian:it.guardian};
     back.innerHTML=`<div class="mth fill">${thumb(tm,'MODUL')}</div>`;
-    closePop(true);
-    const url=m.url||C().lmsUrl||'';
-    const p=document.createElement('div'); p.className='mpop'; p.style.cssText=gv(it.guardian); p.setAttribute('role','dialog');
-    p.innerHTML=`<div class="mp-card"><button class="mp-x" aria-label="Tutup">${XI}</button>
-      <div class="mp-th fill">${thumb(tm,'MODUL')}</div>
-      ${m.label?`<span class="mp-l">${esc(m.label)}</span>`:''}
-      <h3 class="d">${esc(m.title||it.title)}</h3>${m.sub?`<p>${esc(m.sub)}</p>`:''}
-      <div class="mp-q">${esc(C().lmsPrompt||'Modul ini belum ada video demo. Lanjut belajar langsung di Summarecon Learning.')}</div>
-      ${url?`<a class="mp-go" href="${esc(url)}" target="_blank" rel="noopener">${esc(C().lmsLabel||'Buka di Summarecon Learning')} ↗</a>`:''}
-      <em>Ketuk di mana saja untuk menutup</em></div>`;
-    p.onclick=()=>closePop();
-    ov.appendChild(p);
   }
   pick.classList.add('flip');
   await sleep(380); if(my!==RUN)return;
@@ -3739,20 +3745,38 @@ async function openShow(it,r,kind,my,pv){
   const info=document.createElement('div'); info.className='dk-info'+(d?' desk':'');
   if(d){info.style.left=(lo.PL+lo.PW+28)+'px';info.style.right='24px';info.style.top='76px';}
   else info.style.top=(lo.PT+lo.PH+14)+'px';
-  info.innerHTML=`<div>
+  info.innerHTML=`<div class="pn pn-main">
     ${catChips(it)}
     <h2 class="d sh-t">${esc(it.title)}</h2>
     ${it.desc?`<p class="sh-d">${esc(it.desc)}</p>`:''}
     ${ptsHTML(it)}
-    ${modsHTML(it)}</div>`;
+    ${modsHTML(it)}</div><div class="pn pn-mod" hidden style="${gv(it.guardian)}"></div>`;
+  const pnMain=info.querySelector('.pn-main'), pnMod=info.querySelector('.pn-mod');
   if(open)setTimeout(()=>info.classList.add('settled'),750); else info.classList.add('off','settled');
   ov.appendChild(info);
   const more=info.querySelector('#mods-more');
   if(more)more.onclick=()=>{const m=info.querySelector('#mods');const all=m.classList.toggle('all');more.textContent=all?'Tampilkan lebih sedikit':more.dataset.l;};
+  let view='main';
+  const swap=(toMod,html)=>{const from=toMod?pnMain:pnMod,to=toMod?pnMod:pnMain;
+    from.classList.add('pn-out');
+    setTimeout(()=>{from.hidden=true;from.classList.remove('pn-out');if(html!=null)to.innerHTML=html;to.hidden=false;to.classList.remove('pn-in','pn-inl');void to.offsetWidth;to.classList.add(toMod?'pn-in':'pn-inl');info.scrollTop=0;},150);};
+  const backMain=()=>{if(view!=='mod')return;view='main';modBack=null;swap(false);
+    info.querySelectorAll('.mod').forEach(x=>x.classList.remove('on'));
+    mount(it.video,it.thumb,'first');};
+  const openMod=m=>{view='mod';modBack=backMain;
+    const url=m.url||C().lmsUrl||'';
+    swap(true,`<button class="pn-back" data-mback type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg><span>Kembali ke ${esc(it.title)}</span></button>
+      ${m.label?`<span class="mp-l">${esc(m.label)}</span>`:''}
+      <h2 class="d sh-t">${esc(m.title||it.title)}</h2>${m.sub?`<p class="sh-d">${esc(m.sub)}</p>`:''}
+      ${m.desc?`<p class="sh-d sh-d2">${esc(m.desc)}</p>`:''}
+      ${C().lmsPrompt?`<div class="mp-q">${esc(C().lmsPrompt)}</div>`:''}
+      ${url?`<a class="mp-go" href="${esc(url)}" target="_blank" rel="noopener">${esc(C().lmsLabel||'Buka di Summarecon Learning')} ↗</a>`:''}`);
+  };
+  pnMod.addEventListener('click',e=>{if(e.target.closest('[data-mback]'))backMain();});
   info.querySelectorAll('.mod').forEach(b=>b.onclick=()=>{const m=(it.modules||[])[+b.dataset.m];if(!m)return;
     info.querySelectorAll('.mod').forEach(x=>x.classList.toggle('on',x===b));
-    if(m.video)mount(m.video,m.thumb,'mod'); else showThumb(m);
-    if(!d)info.scrollTo({top:0,behavior:'smooth'});});
+    if(m.video)mount(m.video,m.thumb,'mod'); else openMod(m);
+    if(!d&&m.video)info.scrollTo({top:0,behavior:'smooth'});});
   /* tombol minimize / tampilkan penjelasan */
   if(pm==='toggle'||pm==='togglemin'){
     const tg=document.createElement('button'); tg.className='pn-tg'; tg.setAttribute('aria-label','Sembunyikan / tampilkan penjelasan');
@@ -3788,6 +3812,7 @@ function modsForm(it,Q,ci,ii){
         <div class="ad-grid">${fIn('Label',R+'.label')}<span class="ad-ctl" style="align-self:end;justify-content:flex-end"><button data-act="mvm" data-ci="${ci}" data-ii="${ii}" data-mi="${mi}" data-d="-1">↑</button><button data-act="mvm" data-ci="${ci}" data-ii="${ii}" data-mi="${mi}" data-d="1">↓</button><button class="del" data-act="delm" data-ci="${ci}" data-ii="${ii}" data-mi="${mi}">✕</button></span></div>
         ${fIn('Judul',R+'.title',true)}${fIn('Sub judul',R+'.sub',true)}
         <label class="f full"><span>Video modul</span><input data-p="${R}.video" value="${esc(m.video||'')}" placeholder="media/modul.mp4 · URL · YouTube"><span class="f-hint">Kosong = klik modul menampilkan thumbnail + ajakan buka di Summarecon Learning.</span></label>
+        ${fTa('Deskripsi modul (opsional, tampil di halaman detail)',R+'.desc')}
         ${fIn('Link materi di LMS (opsional)',R+'.url',true,'Dipakai tombol ajakan kalau modul tanpa video. Kosong = pakai link LMS default di pengaturan Umum.')}
         <div class="ad-btns"><label>Thumbnail<input type="file" accept="image/*" hidden data-img="${R}"></label><label>Video dari komputer<input type="file" accept="video/*" hidden data-vid="${R}"></label>${m.thumb?`<button class="lt" data-act="clr" data-p="${R}.thumb">Hapus thumb</button>`:''}</div>
       </div></div>`;}).join('')}
@@ -4018,7 +4043,7 @@ addEventListener('keydown',e=>{
   if(adminOn)return; const t=e.target; if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
   if(!PREVIEW&&e.key&&e.key.length===1){kbuf=(kbuf+e.key.toLowerCase()).slice(-11);if(kbuf==='inigueadmin'){kbuf='';openAdmin();return;}}
   if(!$('#cover').hidden&&['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();explodeCover();return;}
-  if(e.key==='Escape'){if(document.fullscreenElement)return;toggleQR(false);if(!closePop())closeAnim();}
+  if(e.key==='Escape'){if(document.fullscreenElement)return;toggleQR(false);if(modBack){modBack();return;}closeAnim();}
   if(MODE==='p'&&appOn&&(e.key==='q'||e.key==='Q'))toggleQR();
   if(MODE==='p'&&(e.key==='f'||e.key==='F'))toggleFS();
 },true);
