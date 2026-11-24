@@ -3814,7 +3814,7 @@ function modsForm(it,Q,ci,ii){
         <label class="f full"><span>Video modul</span><input data-p="${R}.video" value="${esc(m.video||'')}" placeholder="media/modul.mp4 · URL · YouTube"><span class="f-hint">Kosong = klik modul menampilkan thumbnail + ajakan buka di Summarecon Learning.</span></label>
         ${fTa('Deskripsi modul (opsional, tampil di halaman detail)',R+'.desc')}
         ${fIn('Link materi di LMS (opsional)',R+'.url',true,'Dipakai tombol ajakan kalau modul tanpa video. Kosong = pakai link LMS default di pengaturan Umum.')}
-        <div class="ad-btns"><label>Thumbnail<input type="file" accept="image/*" hidden data-img="${R}"></label><label>Video dari komputer<input type="file" accept="video/*" hidden data-vid="${R}"></label>${m.thumb?`<button class="lt" data-act="clr" data-p="${R}.thumb">Hapus thumb</button>`:''}</div>
+        <div class="ad-btns"><label>Thumbnail<input type="file" accept="image/*,.svg" hidden data-img="${R}"></label><label>Video dari komputer<input type="file" accept="video/*" hidden data-vid="${R}"></label>${m.thumb?`<button class="lt" data-act="clr" data-p="${R}.thumb">Hapus thumb</button>`:''}</div>
       </div></div>`;}).join('')}
     <button class="ad-add" data-act="addm" data-ci="${ci}" data-ii="${ii}">+ Tambah modul</button></div>
     <div class="ad-grid" style="grid-column:1/-1;background:#fff;border-radius:14px;padding:10px">
@@ -3866,7 +3866,7 @@ function adminForm(){
           ${isF?fIn('Teaser di kartu gosok',Q+'.teaser',true,'Teks misteri di sampul bawaan. Tidak dipakai kalau kamu upload sampul sendiri.'):''}
           ${isF?`<div class="f full"><span style="font-size:12px;font-weight:700;color:#55525e">Sampul kartu gosok (yang digosok)</span>
             <div class="ad-media" style="margin-top:5px"><div class="pv" style="aspect-ratio:4/3;overflow:hidden;border-radius:12px">${it.cover?`<img src="${esc(it.cover)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`:`<div class="cvph" style="${gv(it.guardian)}">Sampul otomatis<small>warna Guardian + teaser</small></div>`}</div>
-            <div class="ad-in"><div class="ad-btns"><label>Upload gambar<input type="file" accept="image/*" hidden data-cover="${Q}"></label>${it.cover?`<button class="lt" data-act="clr" data-p="${Q}.cover">Hapus</button>`:''}</div>
+            <div class="ad-in"><div class="ad-btns"><label>Upload gambar<input type="file" accept="image/*,.svg" hidden data-cover="${Q}"></label>${it.cover?`<button class="lt" data-act="clr" data-p="${Q}.cover">Hapus</button>`:''}</div>
             <span class="f-hint">Disarankan rasio 4:3 (mis. 1200×900); otomatis dipotong mengikuti kartu. Kosong = sampul otomatis.</span></div></div></div>
           ${it.cover?`<div style="grid-column:1/-1">${fSel('Tombol “Gosok di sini” di atas gambar',Q+'.coverHint',[['on','Tampilkan'],['off','Sembunyikan']])}</div>`:''}`:''}
           ${fSel('Panel penjelasan (di samping video)',Q+'.panel',[['show','Tampilkan'],['toggle','Bisa diminimize (mulai terbuka)'],['togglemin','Bisa diminimize (mulai tertutup)'],['hide','Sembunyikan — video saja']])}
@@ -3881,7 +3881,7 @@ function adminForm(){
             <span class="f-hint">Rasio gambar dipertahankan (tidak dipotong) — kartu gosok ikut rasio ini. SVG otomatis diubah jadi gambar ringan. Kosong = kartu Guardian.</span></div></div></div>
           ${it.thumb?`<div style="grid-column:1/-1">${fSel('Teks di atas thumbnail',Q+'.thumbLbl',[['play','Hanya ikon play'],['full','Judul + ikon play'],['none','Tidak ada (gambar polos)']])}</div>`:''}`:`<div class="f full"><span style="font-size:12px;font-weight:700;color:#55525e">Kartu materi (potret 380×573)</span>
             <div class="ad-media" style="margin-top:5px;grid-template-columns:96px 1fr"><div class="pv cdpv">${cardArt(it)}</div>
-            <div class="ad-in"><div class="ad-btns"><label>Upload kartu<input type="file" accept="image/*" hidden data-card="${Q}"></label>${it.card?`<button class="lt" data-act="clr" data-p="${Q}.card">Hapus</button>`:''}</div>
+            <div class="ad-in"><div class="ad-btns"><label>Upload kartu<input type="file" accept="image/*,.svg" hidden data-card="${Q}"></label>${it.card?`<button class="lt" data-act="clr" data-p="${Q}.card">Hapus</button>`:''}</div>
             <span class="f-hint">PNG/JPG/SVG potret. Judul ikut di gambar. Kosong = kartu Guardian otomatis.</span></div></div></div>`}
           <label class="f full"><span>Video demo / cuplikan</span><input data-p="${Q}.video" value="${esc(it.video)}" placeholder="media/nama-file.mp4 · https://…mp4 · link YouTube">
             <span class="ad-btns" style="margin-top:4px"><label>Pilih video dari komputer<input type="file" accept="video/*" hidden data-vid="${Q}"></label></span>
@@ -3918,11 +3918,15 @@ function renderForm(){
   f.querySelectorAll('details.ad-d').forEach(d=>d.addEventListener('toggle',()=>{d.open?openSet.add(d.dataset.k):openSet.delete(d.dataset.k);}));
   f.oninput=e=>{const el=e.target;if(el.dataset.gh){const c=ghCfg();c[el.dataset.gh]=el.value.trim();ghSave(c);return;}if(!el.dataset.p)return;let v=el.value;if(el.hasAttribute('data-lines'))v=v.split('\n').map(s=>s.trim()).filter(Boolean);setP(el.dataset.p,v);
     if(el.tagName==='SELECT')renderForm(); changed();};
+  const imgIn=t=>{const lb=t.closest&&t.closest('label');return lb&&lb.querySelector('input[type=file][accept*="image"]');};
+  const feed=(inp,file)=>{if(!inp||!file)return;const dt=new DataTransfer();dt.items.add(file);inp.files=dt.files;inp.dispatchEvent(new Event('change',{bubbles:true}));};
+  f.ondragover=e=>{if(imgIn(e.target))e.preventDefault();};
+  f.ondrop=e=>{const inp=imgIn(e.target);if(inp&&e.dataTransfer.files[0]){e.preventDefault();feed(inp,e.dataTransfer.files[0]);}};
   f.onchange=async e=>{const el=e.target;
-    if(el.dataset.card&&el.files[0]){status('Memproses kartu…');setP(el.dataset.card+'.card',await compressCard(el.files[0]));renderForm();changed(true);}
-    if(el.dataset.cover&&el.files[0]){status('Memproses sampul…');setP(el.dataset.cover+'.cover',await compressCover(el.files[0]));renderForm();changed(true);}
+    if(el.dataset.card&&el.files[0]){status('Memproses kartu…');try{setP(el.dataset.card+'.card',await compressCard(el.files[0]));renderForm();changed(true);}catch(_){status('Gambar tidak bisa dibaca');}}
+    if(el.dataset.cover&&el.files[0]){status('Memproses sampul…');try{setP(el.dataset.cover+'.cover',await compressCover(el.files[0]));renderForm();changed(true);}catch(_){status('Gambar tidak bisa dibaca');}}
     if(el.dataset.imgk&&el.files[0]){status('Memproses gambar…');try{setP(el.dataset.imgk+'.thumb',await compressKeep(el.files[0]));renderForm();changed(true);}catch(_){status('Gambar tidak bisa dibaca');}}
-    if(el.dataset.img&&el.files[0]){status('Memproses gambar…');setP(el.dataset.img+'.thumb',await compress(el.files[0]));renderForm();changed(true);}
+    if(el.dataset.img&&el.files[0]){status('Memproses gambar…');try{setP(el.dataset.img+'.thumb',await compress(el.files[0]));renderForm();changed(true);}catch(_){status('Gambar tidak bisa dibaca');}}
     if(el.dataset.vid&&el.files[0]){const file=el.files[0],key='media/'+file.name.replace(/\s+/g,'-');status('Menyimpan video…');
       try{await IDB.put(key,file);if(urlCache[key]){URL.revokeObjectURL(urlCache[key]);delete urlCache[key];}setP(el.dataset.vid+'.video',key);renderForm();changed(true);status('Video tersimpan di browser ini ('+key+')');}catch(_){status('Gagal menyimpan video');}}};
   f.onclick=e=>{const b=e.target.closest('[data-act]');if(!b)return;e.preventDefault();e.stopPropagation();
@@ -3947,7 +3951,7 @@ function setPv(k){pvk=k;document.querySelectorAll('.ad-tabs [data-pv]').forEach(
   const fw=$('#ad-frame .fw');fw.className='fw '+(k==='c'||k==='intro'?'c':'p');$('#ad-if').src=location.href.split('#')[0]+'#preview-'+k;fitPv();}
 function fitPv(){const fr=$('#ad-frame'),fw=$('#ad-frame .fw');if(!fr||!fw)return;const ph=pvk==='c'||pvk==='intro',w=ph?390:1440,h=ph?844:860;
   const s=Math.min((fr.clientWidth-60)/w,(fr.clientHeight-60)/h,1);fw.style.width=w+'px';fw.style.height=h+'px';fw.style.transform=`scale(${s}) translate(-50%,-50%)`;}
-function compress(file){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const Wd=800,Ht=450,c=document.createElement('canvas');c.width=Wd;c.height=Ht;const x=c.getContext('2d');const s=Math.max(Wd/img.width,Ht/img.height),w=img.width*s,h=img.height*s;x.drawImage(img,(Wd-w)/2,(Ht-h)/2,w,h);URL.revokeObjectURL(img.src);res(c.toDataURL('image/jpeg',.8));};img.onerror=rej;img.src=URL.createObjectURL(file);});}
+function compress(file){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const Wd=800,Ht=450,c=document.createElement('canvas');c.width=Wd;c.height=Ht;const x=c.getContext('2d');const s=Math.max(Wd/(img.naturalWidth||1200),Ht/(img.naturalHeight||900)),w=(img.naturalWidth||1200)*s,h=(img.naturalHeight||900)*s;x.drawImage(img,(Wd-w)/2,(Ht-h)/2,w,h);URL.revokeObjectURL(img.src);res(c.toDataURL('image/jpeg',.8));};img.onerror=rej;img.src=URL.createObjectURL(file);});}
 function compressKeep(file){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{
   let iw=img.naturalWidth||img.width||1200,ih=img.naturalHeight||img.height||900; if(iw<10||ih<10){iw=1200;ih=900;}
   const k=Math.min(1,1200/Math.max(iw,ih)),sc=(iw<1200&&/svg/i.test(file.type||file.name))?1200/iw:k,W=Math.max(1,Math.round(iw*sc)),H=Math.max(1,Math.round(ih*sc)),c=document.createElement('canvas');c.width=W;c.height=H;
@@ -3959,8 +3963,8 @@ function compressKeep(file){return new Promise((res,rej)=>{const img=new Image()
     if(T||L||R<W||B<H){T+=1;L+=1;B-=1;R-=1;}}catch(e){L=0;T=0;R=W;B=H;}
   const cw=Math.max(1,R-L),ch=Math.max(1,B-T),o=document.createElement('canvas');o.width=cw;o.height=ch;const y=o.getContext('2d');y.fillStyle='#fff';y.fillRect(0,0,cw,ch);y.drawImage(c,L,T,cw,ch,0,0,cw,ch);
   let u=o.toDataURL('image/webp',.88); if(!/^data:image\/webp/.test(u))u=o.toDataURL('image/jpeg',.88); res(u);};img.onerror=rej;img.src=URL.createObjectURL(file);});}
-function compressCover(file){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const M=1200,k=Math.min(1,M/Math.max(img.width,img.height)),W=Math.max(1,Math.round(img.width*k)),H=Math.max(1,Math.round(img.height*k)),c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);x.drawImage(img,0,0,W,H);URL.revokeObjectURL(img.src);res(c.toDataURL('image/jpeg',.86));};img.onerror=rej;img.src=URL.createObjectURL(file);});}
-function compressCard(file){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const Wd=380,Ht=573,c=document.createElement('canvas');c.width=Wd;c.height=Ht;const x=c.getContext('2d');const s=Math.max(Wd/img.width,Ht/img.height),w=img.width*s,h=img.height*s;x.drawImage(img,(Wd-w)/2,(Ht-h)/2,w,h);URL.revokeObjectURL(img.src);let u=c.toDataURL('image/webp',.82);if(!u.startsWith('data:image/webp'))u=c.toDataURL('image/png');res(u);};img.onerror=rej;img.src=URL.createObjectURL(file);});}
+function compressCover(file){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const M=1200,k=Math.min(1,M/Math.max((img.naturalWidth||1200),(img.naturalHeight||900))),W=Math.max(1,Math.round((img.naturalWidth||1200)*k)),H=Math.max(1,Math.round((img.naturalHeight||900)*k)),c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);x.drawImage(img,0,0,W,H);URL.revokeObjectURL(img.src);res(c.toDataURL('image/jpeg',.86));};img.onerror=rej;img.src=URL.createObjectURL(file);});}
+function compressCard(file){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const Wd=380,Ht=573,c=document.createElement('canvas');c.width=Wd;c.height=Ht;const x=c.getContext('2d');const s=Math.max(Wd/(img.naturalWidth||1200),Ht/(img.naturalHeight||900)),w=(img.naturalWidth||1200)*s,h=(img.naturalHeight||900)*s;x.drawImage(img,(Wd-w)/2,(Ht-h)/2,w,h);URL.revokeObjectURL(img.src);let u=c.toDataURL('image/webp',.82);if(!u.startsWith('data:image/webp'))u=c.toDataURL('image/png');res(u);};img.onerror=rej;img.src=URL.createObjectURL(file);});}
 function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
 async function exportHTML(){
   status('Menyiapkan file…');
