@@ -902,6 +902,14 @@ label.f input:focus,label.f textarea:focus,label.f select:focus{border-color:#12
 .cf.v2.desk .cf-stage{margin-bottom:110px}
 .cf.v2.desk .cf-side{padding-bottom:120px}
 .cf.v2 .cf-top .rb{justify-self:start}
+/* kartu beranda tanpa angka */
+.t2-t{overflow-wrap:anywhere}
+.tile2.m-text .t2-t{font-size:min(19cqw,17cqh);line-height:1}
+.t2-sub{position:relative;margin-top:3.5cqh;font-size:min(8.4cqw,7.6cqh);font-weight:700;line-height:1.25;max-width:85%}
+.tile2.m-title .t2-t{font-size:min(25cqw,23cqh);line-height:.95}
+.dh-tiles .tile2.m-text .t2-t{font-size:min(14cqw,26cqh)}
+.dh-tiles .t2-sub{font-size:min(4.4cqw,8.4cqh);max-width:62%;margin-top:3cqh}
+.dh-tiles .tile2.m-title .t2-t{font-size:min(19cqw,36cqh)}
 
 </style>
 </head>
@@ -3620,10 +3628,11 @@ function bindPoll(){const p=$('#poll');if(!p)return;p.innerHTML=pollHTML();
 function renderHome(back){
   const P=C().poll||[], d=isDesk();
   const tiles=DATA.cats.map((c,i)=>{const art=c.tileArt||c.type;
-    return `<button class="tile2 a" style="--i:${2+i};${gv(c.guardian)}" data-cat="${i}">
+    let tm=c.tileMode||'num'; if(tm==='text'&&!String(c.sub||'').trim())tm='title';
+    return `<button class="tile2 a m-${tm}" style="--i:${2+i};${gv(c.guardian)}" data-cat="${i}">
         <span class="t2-bg">${TILE_ART[art]||`<span class="t2-gp">${pose(c.guardian)}</span>`}</span>
         <span class="t2-t d">${esc(c.tileTitle||c.title)}</span>
-        <span class="t2-row"><span class="t2-n d">${c.items.length}</span><span class="t2-s">${esc(c.sub)}</span></span>
+        ${tm==='num'?`<span class="t2-row"><span class="t2-n d">${c.items.length}</span><span class="t2-s">${esc(c.sub)}</span></span>`:tm==='text'?`<span class="t2-sub">${esc(c.sub)}</span>`:''}
       </button>`;}).join('');
   if(d){
     $('#c-home').innerHTML=`<div class="dh">
@@ -4341,7 +4350,7 @@ function adminForm(){
         ${fIn('Judul kategori',P+'.title')}${fIn('Nomor',P+'.no')}
         ${fSel('Tampilan',P+'.type',Object.entries(TYPE))}${fSel('Guardian kategori',P+'.guardian',GUARD_OPT)}
         ${fIn('Judul kartu beranda',P+'.tileTitle')}${fSel('Gambar kartu beranda',P+'.tileArt',[['fitur','Ilustrasi Fitur'],['materi','Ilustrasi Materi'],['guardian','Karakter Guardian']])}
-        ${fIn('Teks di samping angka',P+'.sub')}${fIn('Sub judul halaman',P+'.introTitle')}
+        ${fSel('Isi kartu beranda',P+'.tileMode',[['num','Judul + angka + teks'],['text','Judul + subjudul (tanpa angka)'],['title','Judul saja']])}${fIn('Teks kartu beranda (samping angka / subjudul)',P+'.sub')}${fIn('Sub judul halaman',P+'.introTitle')}
         ${isF?fTa('Cuplikan kategori',P+'.snippet',false,'Tampil di intro halaman kartu gosok.'):''}
       </div>
       ${isF?`<div class="ad-sub"><b>Banner video (di bawah kartu)</b>
